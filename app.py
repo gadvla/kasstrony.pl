@@ -1,38 +1,38 @@
 import streamlit as st
 from datetime import datetime
-import locale
 
-# Ustawienie języka polskiego dla daty
-try:
-    locale.setlocale(locale.LC_TIME, 'pl_PL.UTF-8')
-except:
-    locale.setlocale(locale.LC_TIME, 'pl_PL') # Zapasowe ustawienie
+# Usuwamy całkowicie import locale i ustawianie lokalizacji, 
+# bo to one powodowały błąd w chmurze.
 
 st.set_page_config(page_title="Faza testów 🛠️", layout="centered")
-
-
 
 # --- STYLIZACJA ---
 st.markdown("""
     <style>
     .stApp { background-color: #121212; color: #E0E0E0; }
     h1, h2 { color: #FFD700 !important; }
-    
-    /* Pasek nawigacyjny - przyklejony do dołu */
     .footer {
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        background-color: #1E1E1E;
-        color: white;
-        text-align: center;
-        padding: 10px 0;
-        border-top: 2px solid #FFD700;
-        z-index: 999;
+        position: fixed; left: 0; bottom: 0; width: 100%;
+        background-color: #1E1E1E; color: white;
+        text-align: center; padding: 10px 0;
+        border-top: 2px solid #FFD700; z-index: 999;
     }
     </style>
 """, unsafe_allow_html=True)
+
+# --- FUNKCJA DATY PO POLSKU ---
+def get_polish_date():
+    dzis = datetime.now()
+    dni_tygodnia = {
+        "Monday": "Poniedziałek", "Tuesday": "Wtorek", "Wednesday": "Środa",
+        "Thursday": "Czwartek", "Friday": "Piątek", "Saturday": "Sobota", "Sunday": "Niedziela"
+    }
+    miesiace = {
+        "January": "stycznia", "February": "lutego", "March": "marca", "April": "kwietnia",
+        "May": "maja", "June": "czerwca", "July": "lipca", "August": "sierpnia",
+        "September": "września", "October": "października", "November": "listopada", "December": "grudnia"
+    }
+    return f"{dni_tygodnia[dzis.strftime('%A')]}, {dzis.day} {miesiace[dzis.strftime('%B')]} {dzis.year}"
 
 # --- INICJALIZACJA ---
 if 'krok' not in st.session_state: st.session_state.krok = 1
@@ -56,15 +56,12 @@ if st.session_state.krok <= 3:
             st.session_state.dane["klasa"] = st.selectbox("Poziom (klasa/semestr):", zakres)
         if st.button("Zakończ"): st.session_state.krok = 4; st.rerun()
 
-# --- EKRAN GŁÓWNY (Po konfiguracji) ---
+# --- EKRAN GŁÓWNY ---
 else:
-    # Zawartość stron
     if st.session_state.active_page == "Dom":
         st.title("Faza testów 🛠️")
         st.subheader(f"Witaj, {st.session_state.dane['imie']}!")
-        # Data po polsku
-        dzis = datetime.now()
-        st.write(f"**Dzisiaj:** {dzis.strftime('%A, %d %B %Y').capitalize()}")
+        st.write(f"**Dzisiaj:** {get_polish_date()}")
         st.write("---")
         st.write(f"👤 Wiek: {st.session_state.dane['wiek']}")
         st.write(f"🏫 Szkoła: {st.session_state.dane['edukacja']}")
@@ -75,17 +72,14 @@ else:
     elif st.session_state.active_page == "Testy":
         st.title("📝 Testy i Egzaminy")
 
-    # --- PASEK NAWIGACYJNY (Naprawiony) ---
-    # Używamy kontenera z przyciskami, który jest zawsze widoczny
-    footer = st.container()
-    with footer:
-        st.markdown('<div class="footer">', unsafe_allow_html=True)
-        cols = st.columns(3)
-        with cols[0]:
-            if st.button("🗓️ Plan"): st.session_state.active_page = "Plan"; st.rerun()
-        with cols[1]:
-            if st.button("🏠 Dom"): st.session_state.active_page = "Dom"; st.rerun()
-        with cols[2]:
-            if st.button("📝 Testy"): st.session_state.active_page = "Testy"; st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-        
+    # --- PASEK NAWIGACYJNY ---
+    st.markdown('<div class="footer">', unsafe_allow_html=True)
+    cols = st.columns(3)
+    with cols[0]:
+        if st.button("🗓️ Plan"): st.session_state.active_page = "Plan"; st.rerun()
+    with cols[1]:
+        if st.button("🏠 Dom"): st.session_state.active_page = "Dom"; st.rerun()
+    with cols[2]:
+        if st.button("📝 Testy"): st.session_state.active_page = "Testy"; st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+    
