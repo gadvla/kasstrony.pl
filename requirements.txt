@@ -1,4 +1,4 @@
-pandas
 streamlit
-holidays
 streamlit-option-menu
+pypdf
+
