@@ -10,6 +10,8 @@ except:
 
 st.set_page_config(page_title="Faza testów 🛠️", layout="centered")
 
+
+
 # --- STYLIZACJA ---
 st.markdown("""
     <style>
