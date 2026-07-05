@@ -1,132 +1,117 @@
 import streamlit as st
-import time
+from datetime import datetime
+import locale
 
-# --- 1. KONFIGURACJA STRONY ---
-st.set_page_config(page_title="Astra AI", layout="centered", initial_sidebar_state="collapsed")
+# Ustawienie polskiego formatu daty (jeśli system pozwala)
+try:
+    locale.setlocale(locale.LC_TIME, 'pl_PL.UTF-8')
+except:
+    pass
 
-# --- 2. STYLIZACJA (Ciemny motyw + Żółty) ---
+st.set_page_config(page_title="Faza testów 🛠️", layout="centered")
+
+# --- STYLIZACJA (Przyklejony pasek i ciemny motyw) ---
 st.markdown("""
     <style>
-    /* Ciemne tło dla całej aplikacji */
-    .stApp {
-        background-color: #121212;
-        color: #E0E0E0;
-    }
+    .stApp { background-color: #121212; color: #E0E0E0; }
+    h1, h2 { color: #FFD700 !important; }
     
-    /* Główny przycisk akcji (Żółty) */
-    div.stButton > button:first-child {
-        background-color: #FFD700; 
-        color: #000000;
-        font-weight: 800;
-        border: none;
-        border-radius: 8px;
+    /* Pasek nawigacyjny */
+    .nav-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
         width: 100%;
-        padding: 12px;
-        transition: all 0.3s ease;
-    }
-    div.stButton > button:first-child:hover {
-        background-color: #FACC15;
-        transform: scale(1.02);
-    }
-
-    /* Pola wprowadzania tekstu i liczb */
-    .stTextInput input, .stNumberInput input {
         background-color: #1E1E1E;
-        color: #FFD700;
-        border: 2px solid #333;
-        border-radius: 8px;
-        font-size: 18px;
+        padding: 15px 0;
+        display: flex;
+        justify-content: space-around;
+        border-top: 2px solid #FFD700;
+        z-index: 1000;
     }
-    .stTextInput input:focus, .stNumberInput input:focus {
-        border-color: #FFD700;
-        box-shadow: none;
-    }
-
-    /* Wygląd nagłówków */
-    h1, h2, h3 {
-        color: #FFD700 !important;
-        text-align: center;
+    .nav-btn {
+        background: none; border: none; color: #FFD700; font-size: 24px; cursor: pointer;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. INICJALIZACJA PAMIĘCI (SESSION STATE) ---
-if 'krok' not in st.session_state:
-    st.session_state.krok = 1
-    st.session_state.dane = {"imie": "", "wiek": 18, "edukacja": ""}
+# --- INICJALIZACJA ---
+if 'krok' not in st.session_state: st.session_state.krok = 1
+if 'dane' not in st.session_state:
+    st.session_state.dane = {"imie": "", "wiek": 18, "edukacja": "", "klasa": ""}
+if 'active_page' not in st.session_state: st.session_state.active_page = "Dom"
 
-def nastepny_krok():
-    st.session_state.krok += 1
-
-# --- 4. LOGIKA KROKÓW (WIZARD) ---
-
-# Pasek postępu
+# --- LOGIKA KONFIGURACJI ---
 if st.session_state.krok <= 3:
-    st.progress(st.session_state.krok / 3)
-st.write("---")
+    if st.session_state.krok == 1:
+        st.title("Faza testów 🛠️")
+        st.session_state.dane["imie"] = st.text_input("Imię:")
+        if st.button("Dalej"): st.session_state.krok = 2; st.rerun()
 
-# KROK 1: Imię
-if st.session_state.krok == 1:
-    st.title("Witaj w Astra AI ⚡")
-    st.markdown("<p style='text-align: center; color: #aaa;'>Twój osobisty asystent nauki. Zaczynamy?</p>", unsafe_allow_html=True)
-    
-    st.session_state.dane["imie"] = st.text_input("Jak masz na imię?", placeholder="Wpisz swoje imię...")
-    
-    st.write("") # Odstęp
-    if st.button("Dalej"):
-        if st.session_state.dane["imie"].strip() == "":
-            st.warning("Podaj imię, żebyśmy mogli przejść dalej!")
-        else:
-            nastepny_krok()
-            st.rerun()
+    elif st.session_state.krok == 2:
+        st.session_state.dane["wiek"] = st.number_input("Wiek:", 5, 100, 18)
+        if st.button("Dalej"): st.session_state.krok = 3; st.rerun()
 
-# KROK 2: Wiek
-elif st.session_state.krok == 2:
-    st.title(f"Miło Cię poznać, {st.session_state.dane['imie']}!")
-    st.markdown("<p style='text-align: center; color: #aaa;'>Muszę wiedzieć, jak dopasować poziom materiałów.</p>", unsafe_allow_html=True)
-    
-    st.session_state.dane["wiek"] = st.number_input("Ile masz lat?", min_value=7, max_value=100, value=18)
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Wróć"):
-            st.session_state.krok -= 1
-            st.rerun()
-    with col2:
-        if st.button("Dalej "):
-            nastepny_krok()
-            st.rerun()
+    elif st.session_state.krok == 3:
+        st.session_state.dane["edukacja"] = st.selectbox("Szkoła:", ["Szkoła podstawowa", "Szkoła średnia", "Studia", "Inne"])
+        
+        # Logika klas/semestrów
+        if st.session_state.dane["edukacja"] == "Szkoła podstawowa":
+            st.session_state.dane["klasa"] = st.selectbox("Klasa:", range(1, 9))
+        elif st.session_state.dane["edukacja"] == "Szkoła średnia":
+            st.session_state.dane["klasa"] = st.selectbox("Klasa:", range(1, 6))
+        elif st.session_state.dane["edukacja"] == "Studia":
+            st.session_state.dane["klasa"] = st.selectbox("Semestr:", range(1, 9))
+        
+        if st.button("Zakończ"): st.session_state.krok = 4; st.rerun()
 
-# KROK 3: Poziom edukacji
-elif st.session_state.krok == 3:
-    st.title("Ostatnie pytanie 🎯")
-    st.markdown("<p style='text-align: center; color: #aaa;'>Na jakim etapie nauki obecnie jesteś?</p>", unsafe_allow_html=True)
-    
-    opcje_edukacji = ["Szkoła podstawowa", "Szkoła średnia", "Studia", "Inne / Samouctwo"]
-    st.session_state.dane["edukacja"] = st.radio("Wybierz poziom:", opcje_edukacji)
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Wróć"):
-            st.session_state.krok -= 1
-            st.rerun()
-    with col2:
-        if st.button("Zakończ konfigurację"):
-            nastepny_krok()
-            with st.spinner("Przygotowuję Twój panel..."):
-                time.sleep(1) # Symulacja ładowania
-            st.rerun()
+# --- EKRAN GŁÓWNY (Po konfiguracji) ---
+else:
+    # Funkcje stron
+    def render_dom():
+        st.title("Faza testów 🛠️")
+        st.subheader(f"Witaj, {st.session_state.dane['imie']}!")
+        
+        dzis = datetime.now()
+        st.info(f"📅 **Dzisiaj:** {dzis.strftime('%A, %d %B %Y')}")
+        
+        st.write("### Twój Profil:")
+        st.write(f"👤 Wiek: {st.session_state.dane['wiek']}")
+        st.write(f"🏫 Szkoła: {st.session_state.dane['edukacja']}")
+        if st.session_state.dane["klasa"]:
+            st.write(f"🎓 Poziom: {st.session_state.dane['klasa']}")
 
-# KROK 4: Ekran główny aplikacji (Po zalogowaniu)
-elif st.session_state.krok == 4:
-    st.title("Panel Główny 🚀")
-    imie = st.session_state.dane["imie"]
-    edukacja = st.session_state.dane["edukacja"]
+    def render_plan():
+        st.title("🗓️ Plan Nauki")
+        st.write("Tutaj pojawi się Twój harmonogram.")
+
+    def render_testy():
+        st.title("📝 Testy i Egzaminy")
+        st.write("Tu wygenerujesz testy z notatek.")
+
+    # Wybór strony
+    if st.session_state.active_page == "Dom": render_dom()
+    elif st.session_state.active_page == "Plan": render_plan()
+    elif st.session_state.active_page == "Testy": render_testy()
+
+    # --- PASEK NAWIGACYJNY (Bottom Bar) ---
+    st.markdown("""
+        <div class="nav-bar">
+            <button class="nav-btn" onclick="window.parent.postMessage({type: 'streamlit:setComponentValue', value: 'Plan'}, '*')">🗓️</button>
+            <button class="nav-btn" onclick="window.parent.postMessage({type: 'streamlit:setComponentValue', value: 'Dom'}, '*')">🏠</button>
+            <button class="nav-btn" onclick="window.parent.postMessage({type: 'streamlit:setComponentValue', value: 'Testy'}, '*')">📝</button>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Hack do obsługi przycisków w Streamlit (używamy st.button jako zamiennik nawigacji, 
+    # ponieważ prawdziwy JS w Streamlit wymaga komponentów, tutaj użyjemy przycisków w kolumnach na dole)
     
-    st.success(f"Profil utworzony! Zalogowano jako **{imie}** ({edukacja}).")
-    st.write("Tu w przyszłości znajdzie się wgrywanie PDF-ów i generator planu nauki.")
-    
-    if st.button("Zacznij od nowa (Debug)"):
-        st.session_state.krok = 1
-        st.rerun()
-              
+    st.write("<br><br><br>", unsafe_allow_html=True) # Odstęp, żeby treść nie wchodziła pod pasek
+    c1, c2, c3 = st.columns(3)
+    with c1: 
+        if st.button("🗓️ Plan"): st.session_state.active_page = "Plan"; st.rerun()
+    with c2: 
+        if st.button("🏠 Dom"): st.session_state.active_page = "Dom"; st.rerun()
+    with c3: 
+        if st.button("📝 Testy"): st.session_state.active_page = "Testy"; st.rerun()
+            
