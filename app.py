@@ -67,4 +67,25 @@ else:
         st.title("🗓️ Plan Nauki")
     elif selected == "Testy":
         st.title("📝 Testy i Egzaminy")
+        st.write("Wgraj plik PDF z notatkami, a AI stworzy dla Ciebie quiz.")
+        
+        uploaded_file = st.file_uploader("Wybierz plik PDF", type="pdf")
+        
+        if uploaded_file is not None:
+            from pypdf import PdfReader
+            
+            with st.spinner("Analizuję Twój plik..."):
+                reader = PdfReader(uploaded_file)
+                tekst_z_pdf = ""
+                for page in reader.pages:
+                    tekst_z_pdf += page.extract_text() + "\n"
+                
+            st.success("Plik wczytany!")
+            st.write(f"Wczytano {len(tekst_z_pdf)} znaków.")
+            
+            # Tu w przyszłości wyślemy 'tekst_z_pdf' do modelu AI
+            if st.button("Wygeneruj test z tego materiału"):
+                st.info("Logika AI zostanie podpięta w następnym kroku!")
+                # st.write(tekst_z_pdf[:500] + "...") # Podgląd pierwszych 500 znaków
+
         
